@@ -18,7 +18,8 @@ const schemaUpdates = [
 		updateNumber: 3,
 		query: `CREATE TABLE IF NOT EXISTS 
 				event(
-					event_id INTEGER PRIMARY KEY, 
+					event_id INTEGER PRIMARY KEY,
+					server_id INTEGER NOT NULL, 
 					title TEXT NOT NULL, 
 					start_date_time TEXT NOT NULL,
 					end_date_time TEXT NOT NULL,
@@ -27,7 +28,7 @@ const schemaUpdates = [
 					creator TEXT NOT NULL,
 					reminder_date_time TEXT,
 					repeat_id INTEGER
-				)`
+				);`
 	},
 	{
 		updateNumber: 4,
@@ -37,7 +38,7 @@ const schemaUpdates = [
 					event_id INTEGER NOT NULL,
 					PRIMARY KEY (user_id, event_id),
 					FOREIGN KEY (event_id) REFERENCES event (event_id)
-				)`
+				);`
 	},
 	{
 		updateNumber: 5,
@@ -47,7 +48,7 @@ const schemaUpdates = [
 					event_id INTEGER NOT NULL,
 					description TEXT,
 					FOREIGN KEY (event_id) REFERENCES event (event_id)
-				)`
+				);`
 	},
 	{
 		updateNumber: 6,
@@ -58,7 +59,7 @@ const schemaUpdates = [
 					has_accepted INTEGER NOT NULL,
 					PRIMARY KEY (user_id, assignment_id),
 					FOREIGN KEY (assignment_id) REFERENCES assignment (assignment_id)
-				)`
+				);`
 	}
 ];
 
