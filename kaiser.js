@@ -9,6 +9,7 @@ const hangman = require('./misc-commands/hangman');
 const config = require('./config.json');
 const filter = require('./utility-commands/chat-filter');
 const sqlite = require('./database/sqlite');
+const events = require('./utility-commands/events');
 
 var messageBeingProcessed;
 
@@ -44,10 +45,8 @@ sqlite.startDatabase("./db.sqlite").then(async (db) => {
 
 		const banishmentsPerChannel = await sqlite.getChannelsAndBanishments(db);
 
-		if (
-			banishmentsPerChannel.has(receivedMessage.channel.id) &&
-			banishmentsPerChannel.get(receivedMessage.channel.id).has(receivedMessage.author.id)
-		) {
+		if (banishmentsPerChannel.has(receivedMessage.channel.id) &&
+				banishmentsPerChannel.get(receivedMessage.channel.id).has(receivedMessage.author.id)) {
 			receivedMessage.delete();
 			return;
 		}
@@ -111,6 +110,13 @@ sqlite.startDatabase("./db.sqlite").then(async (db) => {
 	
 			if (misc.ignoredChannels.has(receivedMessage.channel) && primaryCommand !== 'startlistening') {
 				return;
+			}
+
+			let context = { // to be used to get rid of the big nasty switch statement below
+				message: receivedMessage,
+				args,
+				primaryCommand,
+				db
 			}
 	
 			switch(primaryCommand) {
@@ -205,6 +211,9 @@ sqlite.startDatabase("./db.sqlite").then(async (db) => {
 					break;
 				case 'xkcd':
 					misc.xkcd(receivedMessage, args);
+					break;
+				case 'event':
+					events.event(context);
 					break;
 				default:
 					receivedMessage.channel.send('Invalid command.');
