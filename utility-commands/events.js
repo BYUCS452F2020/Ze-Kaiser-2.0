@@ -112,9 +112,8 @@ const listJobs = (context) => {
 			{
 				context.message.channel.send("Here you go!");
 				const eventMessage = `
-						Id: ${event_id}
-						Event: ${eventToDisplay.title}
-						description: ${row.description}
+					Id: ${event_id}
+					Event: ${eventToDisplay.title}
 					`
 				context.message.channel.send(eventMessage);
 				
@@ -154,6 +153,47 @@ const removeEvent = (context) => {
 	context.message.channel.send("Event ~~destroyed~~ removed with great prejudice");
 }
 
+const listAttendees = (context) => {
+	sqlite.events.getEvent(context.db, event_id, context.message.channel.guild.id).then((res1) => {
+		const list = sqlite.events.getAttendeesForEvent(context.db, event_id).then((res2) => {
+			const eventToDisplay = res1;
+			const toDisplay = res2;
+			
+			if(toDisplay.length)
+			{
+				context.message.channel.send("Here you go!");
+				const eventMessage = `
+					Id: ${event_id}
+					Event: ${eventToDisplay.title}
+					`
+				context.message.channel.send(eventMessage);
+				
+				toDisplay.forEach(row => {
+					const message = `
+						user_id: ${row.user_id}
+					`
+					context.message.channel.send(message);
+				})
+			}
+			else
+			{
+				context.message.channel.send("Ha, and you thought you had attendees...");
+			}
+
+		}).catch(err => {
+			console.log(err)
+			context.message.channel.send("Well I tried...");
+		})
+		console.log(list)
+	}).catch(err => {
+		console.log(err)
+		context.message.channel.send("Well I tried...");
+	})
+	console.log(list)
+
+	context.message.channel.send("consider the attendees listed");
+}
+
 const initializers = {
 	'help': help,
 	'create': createEvent,
@@ -174,7 +214,8 @@ const detailers = {
 	'assignments': listJobs,
 	'edit': editEvent,
 	'create': createEvent,
-	'delete': removeEvent
+	'delete': removeEvent,
+	'listAttendees': listAttendees
 }
 
 module.exports = {
