@@ -222,6 +222,38 @@ const listAttendees = (context) => {
 	context.message.channel.send("consider the attendees listed");
 }
 
+const listAssignees = (context) => {
+	const assignment_id = context.matches[0][1]
+	const list = sqlite.events.getAssigneesForAssignment(context.db, assignment_id).then((res) => {
+	
+		const toDisplay = res;
+
+		if(toDisplay.length)
+		{
+			context.message.channel.send("Here you go!");
+
+			toDisplay.forEach(row => {
+				const message = `
+					user_id: ${row.user_id}
+				`
+				context.message.channel.send(message);
+			})
+		}
+		else
+		{
+			context.message.channel.send("Ha, and you thought you had assignees...");
+		}
+
+	}).catch(err => {
+		console.log(err)
+		context.message.channel.send("Well I tried...");
+	})
+	console.log(list)
+
+
+	context.message.channel.send("consider the assignees listed");
+}
+
 const initializers = {
 	'help': help,
 	'create': createEvent,
@@ -243,7 +275,8 @@ const detailers = {
 	'edit': editEvent,
 	'create': createEvent,
 	'delete': removeEvent,
-	'listAttendees': listAttendees
+	'listAttendees': listAttendees,
+	'listAssignees': listAssignees,
 }
 
 module.exports = {
