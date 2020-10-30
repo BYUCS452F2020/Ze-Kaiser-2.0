@@ -309,9 +309,7 @@ const banish = async (receivedMessage, db, broadcast) => {
 	}
 
 	// can't banish admins or Ze Kaiser
-	if (
-		whoToBanish.has(receivedMessage.client.user.id)
-	) {
+	if (whoToBanish.has(receivedMessage.client.user.id)) {
 		receivedMessage.channel.send("You fool. I am invincible!");
 		return;
 	}

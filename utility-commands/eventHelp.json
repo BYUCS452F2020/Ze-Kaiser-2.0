@@ -1,0 +1,33 @@
+{
+    "create": {
+        "title": "!event create",
+        "description": "Starts the event creation process. Prepare for bot DMs aplenty."
+    },
+    "list": {
+        "title": "!event list",
+        "description": "Lists all events for the server (no duplicates for repeat events)"
+    },
+    "join": {
+        "title": "!event \"<event name>\" join",
+        "description": "Marks you as an attendee for the event."
+    },
+    "assign": {
+        "title": "!event \"<event name>\" assign <@user> to \"<assignment/task>\"",
+        "description": "Assigns the specified user to the specified assignment. Use 'me' to assign yourself."
+    },
+    "task": {
+        "title": "!event \"<event name>\" (task | job | assignment) create \"<assignment name>\"",
+        "description": "Creates a new assignment for the specified event"
+    },
+    "taskEdit": {
+        "title": "!event \"<event name>\" (task | job | assignment) edit \"<assignment name>\""
+    },
+    "listJobs": {
+        "title": "!event \"<event name>\" (jobs | joblist | assignments)",
+        "description": "Lists all the assignments for the given event."
+    },
+    "eventEdit": {
+        "title": "!event \"<event name>\" edit",
+        "description": "Starts the event edit process. Prepare for more bot DMs."
+    }
+}
