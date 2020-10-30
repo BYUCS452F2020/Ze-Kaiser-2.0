@@ -32,7 +32,7 @@ const insertEvent = (db, eventData) => {
             eventData.creator, 
             eventData.reminder_date_time, 
             eventData.repeat_id
-        ]).promise
+        ])
 		
 	);
 };
@@ -85,7 +85,7 @@ const deleteEvent = (db, event_id) => {
     return (
         sqlite.run(db, 'DELETE FROM Event WHERE event_id = ?', [
             event_id
-        ]).promise
+        ])
 	);
 }
 
@@ -97,7 +97,7 @@ attendeeData
 }
 */
 const insertAttendee = (db, attendeeData) => {
-    return Promise.all(
+    return (
         sqlite.run(db, 'INSERT INTO Attendee(user_id, event_id) VALUES (?, ?)', [
             attendeeData.user_id, 
             attendeeData.event_id
@@ -128,7 +128,7 @@ assignmentData
 }
 */
 const insertAssignment = (db, assignmentData) => {
-    return Promise.all(
+    return (
         sqlite.run(db, 'INSERT INTO Assignment(assignment_id, event_id, description) VALUES (?, ?, ?)', [
             assignmentData.assignment_id, 
             assignmentData.event_id,
@@ -159,7 +159,7 @@ asigneeData
 }
 */
 const insertAssignee = (db, asigneeData) => {
-    return Promise.all(
+    return (
         sqlite.run(db, 'INSERT INTO Assignee(user_id, assignment_id, has_accepted) VALUES (?, ?, ?)', [
             asigneeData.user_id, 
             asigneeData.assignment_id,

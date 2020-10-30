@@ -75,6 +75,7 @@ const listEvents = (context) => {
 				`
 				context.message.channel.send(message);
 			})
+			context.message.channel.send("That's all folks");
 		}
 		else
 		{
@@ -85,16 +86,44 @@ const listEvents = (context) => {
 		console.log(err)
 		context.message.channel.send("Well I tried...");
 	})
-	console.log(list)
-	context.message.channel.send("consider the events listed");
 }
 
 const joinEvent = (context) => {
-	context.message.channel.send("consider yourself as attending the event");
+	const eventId = context.matches[0][1] || 1;
+	const attendeeData = {
+		user_id: context.message.author.id,
+		event_id: eventId
+	}
+	sqlite.events.insertAttendee(context.db, attendeeData).then(res => {
+		context.message.channel.send("consider yourself as attending the event");
+	})
+
 }
 
 const assign = (context) => {
-	context.message.channel.send("consider that person assigned.");
+	const assignmentId = context.matches[0][1] || 1;
+	for(const userId of context.message.mentions.users.keyArray())
+	{
+		const assigneeData = {
+			user_id: userId,
+			assignment_id: assignmentId,
+			has_accepted: 0
+		}
+		sqlite.events.insertAssignee(context.db, assigneeData)
+	}
+	context.message.channel.send("consider them assigned.");
+
+}
+
+const createTask = (context) => {
+	const eventId = context.matches[0][1] || 1;
+	const attendeeData = {
+		event_id: eventId,
+		description: "Do all the things!!!"
+	}
+	sqlite.events.insertAssignment(context.db, attendeeData).then(res => {
+		context.message.channel.send("consider the task created");
+	})
 }
 
 const editTask = (context) => {
@@ -107,7 +136,7 @@ const listJobs = (context) => {
 		const list = sqlite.events.getAssignmentsForEvent(context.db, event_id).then((res2) => {
 			const eventToDisplay = res1;
 			const toDisplay = res2;
-			
+
 			if(toDisplay.length)
 			{
 				context.message.channel.send("Here you go!");
@@ -116,7 +145,7 @@ const listJobs = (context) => {
 					Event: ${eventToDisplay.title}
 					`
 				context.message.channel.send(eventMessage);
-				
+
 				toDisplay.forEach(row => {
 					const message = `
 						assignment_id: ${row.assignment_id}
@@ -139,7 +168,6 @@ const listJobs = (context) => {
 		console.log(err)
 		context.message.channel.send("Well I tried...");
 	})
-	console.log(list)
 
 	context.message.channel.send("consider the jobs listed");
 }
@@ -154,11 +182,12 @@ const removeEvent = (context) => {
 }
 
 const listAttendees = (context) => {
+	const event_id = context.matches[0][1]
 	sqlite.events.getEvent(context.db, event_id, context.message.channel.guild.id).then((res1) => {
 		const list = sqlite.events.getAttendeesForEvent(context.db, event_id).then((res2) => {
 			const eventToDisplay = res1;
 			const toDisplay = res2;
-			
+
 			if(toDisplay.length)
 			{
 				context.message.channel.send("Here you go!");
@@ -167,7 +196,7 @@ const listAttendees = (context) => {
 					Event: ${eventToDisplay.title}
 					`
 				context.message.channel.send(eventMessage);
-				
+
 				toDisplay.forEach(row => {
 					const message = `
 						user_id: ${row.user_id}
@@ -189,7 +218,6 @@ const listAttendees = (context) => {
 		console.log(err)
 		context.message.channel.send("Well I tried...");
 	})
-	console.log(list)
 
 	context.message.channel.send("consider the attendees listed");
 }
