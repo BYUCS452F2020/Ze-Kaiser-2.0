@@ -97,15 +97,51 @@ const assign = (context) => {
 	context.message.channel.send("consider that person assigned.");
 }
 
-const createTask = (context) => {
-	context.message.channel.send("consider the task created");
-}
-
 const editTask = (context) => {
 	context.message.channel.send("consider the task edited");
 }
 
 const listJobs = (context) => {
+	const event_id = context.matches[0][1] || "1";
+	sqlite.events.getEvent(context.db, event_id, context.message.channel.guild.id).then((res1) => {
+		const list = sqlite.events.getAssignmentsForEvent(context.db, event_id).then((res2) => {
+			const eventToDisplay = res1;
+			const toDisplay = res2;
+			
+			if(toDisplay.length)
+			{
+				context.message.channel.send("Here you go!");
+				const eventMessage = `
+						Id: ${event_id}
+						Event: ${eventToDisplay.title}
+						description: ${row.description}
+					`
+				context.message.channel.send(eventMessage);
+				
+				toDisplay.forEach(row => {
+					const message = `
+						assignment_id: ${row.assignment_id}
+						description: ${row.description}
+					`
+					context.message.channel.send(message);
+				})
+			}
+			else
+			{
+				context.message.channel.send("Ha, and you thought you had jobs...");
+			}
+
+		}).catch(err => {
+			console.log(err)
+			context.message.channel.send("Well I tried...");
+		})
+		console.log(list)
+	}).catch(err => {
+		console.log(err)
+		context.message.channel.send("Well I tried...");
+	})
+	console.log(list)
+
 	context.message.channel.send("consider the jobs listed");
 }
 
