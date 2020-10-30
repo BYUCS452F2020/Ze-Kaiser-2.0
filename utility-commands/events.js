@@ -1,3 +1,5 @@
+const sqlite = require('../database/sqlite')
+
 const event = (context) => {
 	let eventParams = context.args.join(" ");
 	const nameRegex = /"(.*?[^\\])"/g;
@@ -19,6 +21,7 @@ const event = (context) => {
 		command = (args[0] === "assign") ? detailers[args[0]] : detailers[args.join('')];
 	}
 
+	context.matches = paramMatches;
 	if (command) {
 		command(context);
 	}
@@ -42,10 +45,47 @@ const help = (context) => {
 }
 
 const createEvent = (context) => {
+	const title = context.matches[0][1] || "title";
+	const eventData = {
+		server_id: context.message.channel.guild.id,
+		title: title,
+		start_date_time: "today",
+		end_date_time: "today but in an hour",
+		description: "This is a new event we created",
+		creator: context.message.author.id
+	}
+
+	sqlite.events.insertEvent(context.db, eventData);
 	context.message.channel.send("consider the event created");
 }
 
 const listEvents = (context) => {
+	const list = sqlite.events.getAllEvents(context.db, context.message.channel.guild.id).then((res) => {
+		const toDisplay = res.filter(response => response.server_id === context.message.channel.guild.id);
+		if(toDisplay.length)
+		{
+			context.message.channel.send("Here you go!");
+			toDisplay.forEach(row => {
+				const message = `
+					Id: ${row.event_id}
+					title: ${row.title}
+					description: ${row.description}
+					start: ${row.start_date_time}
+					end: ${row.end_date_time}
+				`
+				context.message.channel.send(message);
+			})
+		}
+		else
+		{
+			context.message.channel.send("Ha, and you thought you had events...");
+		}
+
+	}).catch(err => {
+		console.log(err)
+		context.message.channel.send("Well I tried...");
+	})
+	console.log(list)
 	context.message.channel.send("consider the events listed");
 }
 
@@ -73,6 +113,11 @@ const editEvent = (context) => {
 	context.message.channel.send("consider the event edited");
 }
 
+const removeEvent = (context) => {
+	sqlite.events.deleteEvent(context.db, context.matches[0][1])
+	context.message.channel.send("Event ~~destroyed~~ removed with great prejudice");
+}
+
 const initializers = {
 	'help': help,
 	'create': createEvent,
@@ -91,7 +136,9 @@ const detailers = {
 	'jobs': listJobs,
 	'joblist': listJobs,
 	'assignments': listJobs,
-	'edit': editEvent
+	'edit': editEvent,
+	'create': createEvent,
+	'delete': removeEvent
 }
 
 module.exports = {

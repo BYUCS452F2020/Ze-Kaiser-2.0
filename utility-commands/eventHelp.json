@@ -29,5 +29,9 @@
     "eventEdit": {
         "title": "!event \"<event name>\" edit",
         "description": "Starts the event edit process. Prepare for more bot DMs."
+    },
+    "delete": {
+        "title": "!event \"<event id>\" delete",
+        "description": "Ruins all the fun for everyone by killing the event"
     }
 }

@@ -3,7 +3,7 @@
  */
 
 
-import * as sqlite from './sqlite';
+const sqlite = require('./sqlite');
 
 /*
 eventData
@@ -21,10 +21,9 @@ eventData
 }
 */
 const insertEvent = (db, eventData) => {
-	return Promise.all(
-        sqlite.run(db, 'INSERT INTO Event(event_id, server_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            eventData.event_id,
-            eventData.server_id, 
+	return (
+        sqlite.run(db, 'INSERT INTO Event(server_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            eventData.server_id,
             eventData.title, 
             eventData.start_date_time, 
             eventData.end_date_time, 
@@ -33,7 +32,7 @@ const insertEvent = (db, eventData) => {
             eventData.creator, 
             eventData.reminder_date_time, 
             eventData.repeat_id
-        ])
+        ]).promise
 		
 	);
 };
@@ -83,10 +82,10 @@ const updateEvent = (db, event_id, updateData) => {
 };
 
 const deleteEvent = (db, event_id) => {
-    return Promise.all(
-        run(db, 'DELETE FROM Event WHERE event_id = ?', [
+    return (
+        sqlite.run(db, 'DELETE FROM Event WHERE event_id = ?', [
             event_id
-        ])
+        ]).promise
 	);
 }
 

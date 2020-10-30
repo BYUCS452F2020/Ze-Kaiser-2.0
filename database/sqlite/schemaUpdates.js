@@ -19,8 +19,8 @@ const schemaUpdates = [
 		query: `CREATE TABLE IF NOT EXISTS 
 				event(
 					event_id INTEGER PRIMARY KEY,
-					server_id INTEGER NOT NULL, 
-					title TEXT NOT NULL, 
+					server_id TEXT NOT NULL, 
+					title TEXT NOT NULL UNIQUE, 
 					start_date_time TEXT NOT NULL,
 					end_date_time TEXT NOT NULL,
 					description TEXT,
@@ -34,7 +34,7 @@ const schemaUpdates = [
 		updateNumber: 4,
 		query: `CREATE TABLE IF NOT EXISTS
 				attendee(
-					user_id INTEGER NOT NULL,
+					user_id TEXT NOT NULL,
 					event_id INTEGER NOT NULL,
 					PRIMARY KEY (user_id, event_id),
 					FOREIGN KEY (event_id) REFERENCES event (event_id)
@@ -54,7 +54,7 @@ const schemaUpdates = [
 		updateNumber: 6,
 		query: `CREATE TABLE IF NOT EXISTS
 				assignee(
-					user_id INTEGER NOT NULL,
+					user_id TEXT NOT NULL,
 					assignment_id INTEGER NOT NULL,
 					has_accepted INTEGER NOT NULL,
 					PRIMARY KEY (user_id, assignment_id),
