@@ -8,7 +8,8 @@ import * as sqlite from './sqlite';
 /*
 eventData
 {
-    event_id: 0,
+    event_id: "",
+    server_id: "",
     title: "",
     start_date_time: "2000-01-01T00:00:00",
     end_date_time: "2000-01-01T00:00:00",
@@ -16,13 +17,14 @@ eventData
     size: "",
     creator: "",
     reminder_date_time: "2000-01-01T00:00:00",
-    repeat_id: 0
+    repeat_id: ""
 }
 */
 const insertEvent = (db, eventData) => {
 	return Promise.all(
-        sqlite.run(db, 'INSERT INTO Event(event_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            eventData.event_id, 
+        sqlite.run(db, 'INSERT INTO Event(event_id, server_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            eventData.event_id,
+            eventData.server_id, 
             eventData.title, 
             eventData.start_date_time, 
             eventData.end_date_time, 
@@ -36,8 +38,8 @@ const insertEvent = (db, eventData) => {
 	);
 };
 
-const getEvent = async (db, event_id) => {
-    const result = await sqlite.getSingleRow(db, `SELECT * from Event where event_id = ${event_id}`);
+const getEvent = async (db, event_id, server_id) => {
+    const result = await sqlite.getSingleRow(db, `SELECT * FROM Event WHERE event_id = ${event_id} AND server_id = ${server_id}`);
 
     if (result == undefined) {
         return null;
@@ -60,8 +62,8 @@ const getEvent = async (db, event_id) => {
     // }
 };
 
-const getAllEvents = async (db) => {
-    const results = await sqlite.getAllRows(db, 'SELECT * from Event');
+const getAllEvents = async (db, server_id) => {
+    const results = await sqlite.getAllRows(db, `SELECT * FROM Event WHERE server_id = ${server_id}`);
     return results;
 };
 
@@ -91,8 +93,8 @@ const deleteEvent = (db, event_id) => {
 /*
 attendeeData
 {
-    user_id: 0,
-    event_id: 0
+    user_id: "",
+    event_id: ""
 }
 */
 const insertAttendee = (db, attendeeData) => {
@@ -121,8 +123,8 @@ const deleteAttendee = (db, attendeeData) => {
 /*
 assignmentData
 {
-    assignment_id: 0,
-    event_id: 0,
+    assignment_id: "",
+    event_id: "",
     description: ""
 }
 */
@@ -152,8 +154,8 @@ const deleteAssignment = (db, assignment_id) => {
 /*
 asigneeData
 {
-    user_id: 0,
-    assignment_id: 0,
+    user_id: "",
+    assignment_id: "",
     has_accepted: false
 }
 */
