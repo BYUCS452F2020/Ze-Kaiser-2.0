@@ -21,21 +21,18 @@ eventData
 }
 */
 const insertEvent = (db, eventData) => {
-	return (
-        sqlite.run(db, 'INSERT INTO Event(server_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            eventData.server_id,
-            eventData.title, 
-            eventData.start_date_time, 
-            eventData.end_date_time, 
-            eventData.description, 
-            eventData.size, 
-            eventData.creator, 
-            eventData.reminder_date_time, 
-            eventData.repeat_id
-        ])
-		
-	);
-};
+	return sqlite.run(db, 'INSERT INTO Event(server_id, title, start_date_time, end_date_time, description, size, creator, reminder_date_time, repeat_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        eventData.server_id,
+        eventData.title, 
+        eventData.start_date_time, 
+        eventData.end_date_time, 
+        eventData.description, 
+        eventData.size, 
+        eventData.creator, 
+        eventData.reminder_date_time, 
+        eventData.repeat_id
+    ]);
+}
 
 const getEvent = async (db, event_id, server_id) => {
     const result = await sqlite.getSingleRow(db, `SELECT * FROM Event WHERE event_id = ${event_id} AND server_id = ${server_id}`);
@@ -76,17 +73,12 @@ const updateEvent = (db, event_id, updateData) => {
         }
     }
     sql += `WHERE event_id = ${event_id};`;
-    return Promise.all(
-        sqlite.run(db, sql)
-	);
+    return sqlite.run(db, sql);
 };
 
 const deleteEvent = (db, event_id) => {
-    return (
-        sqlite.run(db, 'DELETE FROM Event WHERE event_id = ?', [
-            event_id
-        ])
-	);
+    // definitely gonna need to do some admin checks on this one
+    return sqlite.run(db, 'DELETE FROM Event WHERE event_id = ?', [event_id]);
 }
 
 /*

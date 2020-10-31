@@ -11,6 +11,14 @@
         "title": "!event \"<event name>\" join",
         "description": "Marks you as an attendee for the event."
     },
+    "listAttendees": {
+        "title": "",
+        "description": ""
+    },
+    "listAssignees": {
+        "title": "",
+        "description": ""
+    },
     "assign": {
         "title": "!event \"<event name>\" assign <@user> to \"<assignment/task>\"",
         "description": "Assigns the specified user to the specified assignment. Use 'me' to assign yourself."
@@ -22,7 +30,7 @@
     "taskEdit": {
         "title": "!event \"<event name>\" (task | job | assignment) edit \"<assignment name>\""
     },
-    "listJobs": {
+    "listTasks": {
         "title": "!event \"<event name>\" (jobs | joblist | assignments)",
         "description": "Lists all the assignments for the given event."
     },
