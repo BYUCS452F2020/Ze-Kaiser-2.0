@@ -17,6 +17,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 	nosql.startDatabase("./nosql.json").then(async (nosqlDB) => {
 		client.on('ready', () => {
 			console.log('Connected as ' + client.user.tag);
+			// run config.init
 		});
 
 		client.on('error', () => {
@@ -122,7 +123,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					return;
 				}
 
-				let context = { // to be used to get rid of the big nasty switch statement below
+				let context = {
 					message: receivedMessage,
 					args,
 					primaryCommand,
@@ -131,7 +132,6 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 				}
 
 				const foundTag = nosqlDB.get('tags').find({"serverID": serverid, "tag": primaryCommand}).value()
-
 
 				if (baseCommands[primaryCommand]) {
 					baseCommands[primaryCommand](context);
