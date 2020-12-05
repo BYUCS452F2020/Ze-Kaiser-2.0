@@ -19,14 +19,26 @@ const filter = (receivedMessage) => {
 			}).catch((err) => {
 				base.sendError(receivedMessage, err);
 			});
-			let modMessage = `${receivedMessage.author} sent this message at ${receivedMessage.createdAt}: ${receivedMessage.content}`;
+
+			let modEmbed = new Discord.MessageEmbed().setColor('#F69400');
+			modEmbed.setTitle('Glitch in the Matrix');
+			if (receivedMessage) {
+				modEmbed.addField('Message:', receivedMessage.content);
+				modEmbed.addField('Guilty User:', receivedMessage.author);
+				modEmbed.addField('Channel:', receivedMessage.channel);
+				if (receivedMessage.guild) {
+					modEmbed.addField('Server/Guild:', receivedMessage.guild);
+				}
+				modEmbed.addField('Time:', receivedMessage.createdAt)
+			}
+
 			if (modChannel) {
-				modChannel.send(modMessage);
+				modChannel.send(modEmbed);
 			}
 			else {
 				config.administrators.forEach(userID => {
 					client.users.fetch(userID).then((user) => {
-						user.send(modMessage);
+						user.send(modEmbed);
 					});
 				});
 			}

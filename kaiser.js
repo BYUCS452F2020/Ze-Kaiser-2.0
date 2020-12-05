@@ -6,10 +6,10 @@ const misc = require('./misc-commands/misc');
 const base = require('./base-commands/base');
 const starboard = require('./misc-commands/starboard');
 const hangman = require('./misc-commands/hangman');
-const config = require('./config.json');
 const filter = require('./utility-commands/chat-filter');
 const sqlite = require('./database/sqlite');
 const events = require('./utility-commands/events');
+const baseCommands = require('./commands.js');
 
 var messageBeingProcessed;
 
