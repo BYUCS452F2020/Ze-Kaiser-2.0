@@ -16,7 +16,7 @@ const event = (context) => {
 		command = initializers[args[0]];
 	}
 	else if (results.length === 1) {
-		command = detailers[args[0]];
+		command = (args[0] === "job" || args[0] === "task" || args[0] === "assignment") ? detailers[args.join('')] : detailers[args[0]];
 	}
 	else {
 		command = (args[0] === "assign") ? detailers[args[0]] : detailers[args.join('')];
@@ -90,11 +90,9 @@ const createEvent = async (context) => {
 				try {
 					eventData.start_date_time = moment(collected.first().content.trim(), "MM/DD/YYYY h:mm a"); // need error handling
 				} catch (error) {
-					console.log("to separate");
 					console.log(error);
 					momentFailed = true;
 				}
-				console.log(eventData.start_date_time);
 				if (!eventData.start_date_time.isValid()) momentFailed = true;
 				startTimeCorrect = !momentFailed;
 			})
@@ -218,7 +216,7 @@ const joinEvent = (context) => {
 		event_id: eventId
 	}
 	sqlite.events.insertAttendee(context.db, attendeeData).then(res => {
-		context.message.channel.send("consider yourself as attending the event");
+		context.message.channel.send("You are now marked as attending the event.");
 	})
 
 }
@@ -234,17 +232,21 @@ const assign = (context) => {
 		sqlite.events.insertAssignee(context.db, assigneeData)
 	}
 	context.message.channel.send("consider them assigned.");
-
 }
 
-const createTask = (context) => {
+const createTask = async (context) => {
 	const eventId = context.matches[0] || 1;
-	const attendeeData = {
+	const taskData = {
 		event_id: eventId,
 		description: "Do all the things!!!"
 	}
-	sqlite.events.insertAssignment(context.db, attendeeData).then(res => {
-		context.message.channel.send("consider the task created");
+	await context.message.channel.send("What is the task?");
+	await context.message.channel.awaitMessages(m => m.author.id == context.message.author.id, {max: 1, time: 60000, errors: ['time']})
+	.then(collected => {
+		taskData.description = collected.first().content;
+	});
+	sqlite.events.insertAssignment(context.db, taskData).then(res => {
+		context.message.channel.send("The task has been created.");
 	});
 }
 
@@ -259,12 +261,12 @@ const listTasks = (context) => {
 			const eventToDisplay = eventResult;
 			const toDisplay = assignmentResults;
 
-			let message;
+			let message = "";
 			if(toDisplay.length) {
 				message += `Id: ${event_id}\nEvent: ${eventToDisplay.title}\n`;
 
 				toDisplay.forEach(row => {
-					message += `assignment_id: ${row.assignment_id}\ndescription: ${row.description}\n`;
+					message += `assignment_id: ${row.assignment_id}\ndescription: ${row.description}\n\n`;
 				})
 				context.message.channel.send(message);
 			}
@@ -279,9 +281,7 @@ const listTasks = (context) => {
 	}).catch(err => {
 		console.log(err);
 		context.message.channel.send("Well I tried...");
-	})
-
-	context.message.channel.send("consider the jobs listed");
+	});
 }
 
 const editEvent = (context) => {
@@ -291,7 +291,7 @@ const editEvent = (context) => {
 const removeEvent = (context) => {
 	// check creator id and and only allow delete if creator or admin
 	sqlite.events.deleteEvent(context.db, context.matches[0]);
-	context.message.channel.send("Event ~~destroyed~~ removed with great prejudice");
+	context.message.channel.send("Event ~~destroyed~~ removed with great prejudice.");
 }
 
 const listAttendees = (context) => {
@@ -347,8 +347,6 @@ const listAssignees = (context) => {
 		console.log(err);
 		context.message.channel.send("Well I tried...");
 	});
-
-	context.message.channel.send("consider the assignees listed");
 }
 
 const initializers = {

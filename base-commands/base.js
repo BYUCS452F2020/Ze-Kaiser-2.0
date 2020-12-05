@@ -94,12 +94,7 @@ const addRoles = (receivedMessage, roles) => {
 		}
 	}
 	return receivedMessage.member.roles.add(zeRoles).then(() => {
-		const addedRoles = [];	//This is to keep the bot from pinging everyone with the roles it added
-		for (let i = 0; i < zeRoles.length; ++i) {
-			if (receivedMessage.member.roles.cache.has(zeRoles[i].id)) {
-				addedRoles.push(zeRoles[i].name);
-			}
-		}
+		const addedRoles = zeRoles.map(r => r.name);	//This is to keep the bot from pinging everyone with the roles it added
 		if (addedRoles.length) {
 			let specifics = (previousRoles.length ? "\nYou already have these roles: " + previousRoles.join(', ') : '') + 
 				(nonExistentRoles.length ? "\nThese roles don't seem to exist: " + nonExistentRoles.join(', ') + "\nMake sure the spelling is correct." : '');

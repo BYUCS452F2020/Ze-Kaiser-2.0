@@ -8,38 +8,39 @@
         "description": "Lists all events for the server (no duplicates for repeat events)"
     },
     "join": {
-        "title": "!event \"<event name>\" join",
+        "title": "!event \"<event ID>\" join",
         "description": "Marks you as an attendee for the event."
     },
     "listAttendees": {
-        "title": "",
-        "description": ""
+        "title": "!event \"<event ID>\" listattendees",
+        "description": "Lists those that are attending the event."
     },
     "listAssignees": {
-        "title": "",
-        "description": ""
+        "title": "!event listassignees for \"<task ID>\"",
+        "description": "Lists the assignees for the given task"
     },
     "assign": {
-        "title": "!event \"<event name>\" assign <@user> to \"<assignment/task>\"",
-        "description": "Assigns the specified user to the specified assignment. Use 'me' to assign yourself."
+        "title": "!event assign <@user> to \"<task ID>\"",
+        "description": "Assigns the specified user to the specified task. Use 'me' to assign yourself."
     },
     "task": {
-        "title": "!event \"<event name>\" (task | job | assignment) create \"<assignment name>\"",
-        "description": "Creates a new assignment for the specified event"
+        "title": "!event \"<event ID>\" (task | job | assignment) create ",
+        "description": "Creates a new task for the specified event."
     },
     "taskEdit": {
-        "title": "!event \"<event name>\" (task | job | assignment) edit \"<assignment name>\""
+        "title": "!event \"<event ID>\" (task | job | assignment) edit \"<task ID>\"",
+        "description": "Edits the description of the task"
     },
     "listTasks": {
-        "title": "!event \"<event name>\" (jobs | joblist | assignments)",
-        "description": "Lists all the assignments for the given event."
+        "title": "!event \"<event ID>\" (jobs | joblist | assignments)",
+        "description": "Lists all the tasks for the given event."
     },
     "eventEdit": {
-        "title": "!event \"<event name>\" edit",
+        "title": "!event \"<event ID>\" edit",
         "description": "Starts the event edit process. Prepare for more bot DMs."
     },
     "delete": {
-        "title": "!event \"<event id>\" delete",
+        "title": "!event \"<event ID>\" delete",
         "description": "Ruins all the fun for everyone by killing the event"
     }
 }
