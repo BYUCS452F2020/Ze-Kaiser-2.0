@@ -339,6 +339,8 @@ const xkcd = async (context) => {
 	receivedMessage.channel.send(comicEmbed);
 }
 
+
+
 module.exports = {
 	meme,
 	autoReact,

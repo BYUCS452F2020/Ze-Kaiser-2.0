@@ -44,7 +44,7 @@ const addRole = (context) => {
 		return;
 	}
 
-	if (role == '@everyone') {
+	if (role === '@everyone') {
 		receivedMessage.channel.send('Foolish mortal, you cannot add that role!');
 		return;
 	}
@@ -62,7 +62,7 @@ const addRole = (context) => {
 			receivedMessage.channel.send(`${receivedMessage.author}, you have been given the "${zeRole.name}" role.`).catch((err) => {
 				sendError(receivedMessage, err);
 			});
-		}).catch((err) => {
+		}).catch(() => {
 			receivedMessage.channel.send('Failed to add the role.');
 		});
 	}
@@ -109,7 +109,7 @@ const addRoles = (context) => {
 		else {
 			receivedMessage.channel.send(`${receivedMessage.author}, you either already have all of those roles or they don't exist!`);
 		}
-	}).catch((err) => {
+	}).catch(() => {
 		receivedMessage.channel.send('There was an error adding the roles.');
 	});
 }
@@ -130,7 +130,7 @@ const removeRole = (context) => {
 		return;
 	}
 
-	if (role == '@everyone') {
+	if (role === '@everyone') {
 		receivedMessage.channel.send('Foolish mortal, you cannot remove that role!');
 		return;
 	}
@@ -140,7 +140,7 @@ const removeRole = (context) => {
 			receivedMessage.channel.send(`${receivedMessage.author}, I've removed the "${zeRole.name}" role from you.`).catch((err) => {
 				sendError(receivedMessage, err);
 			});
-		}).catch((err) => {
+		}).catch(() => {
 			receivedMessage.channel.send('Failed to remove the role.');
 		});
 	} else {
@@ -197,7 +197,7 @@ const removeRoles = (context) => {
 				sendError(receivedMessage, "Something got real messed up somehow. Hopefully the error can be determined by looking at the above message.")
 			}
 		}
-	}).catch((err) => {
+	}).catch(() => {
 		receivedMessage.channel.send('There was an error removing the roles.');
 	});
 }
@@ -224,7 +224,7 @@ const info = (context) => {
 			receivedMessage.channel.send('Channel not found. You must type the channel name exactly as it appears in the list, including dashes.');
 			return;
 		}
-		if (zeChannel.type == 'text') {
+		if (zeChannel.type === 'text') {
 			receivedMessage.channel.send(`${zeChannel.name}: ${zeChannel.topic}`).catch((err) => {
 				sendError(receivedMessage, err);
 			});
@@ -253,14 +253,14 @@ const roles = (context) => {
 	let roleEmbed = new Discord.MessageEmbed().setColor('#2295d4');
 	let eligibleRoles = [];
 	for (const [snowflake, role] of receivedMessage.guild.roles.cache) {
-		if (botHighestRole.comparePositionTo(role) > 0 && role.name != '@everyone' && role.editable && role.name.indexOf('complete') == -1) {
+		if (botHighestRole.comparePositionTo(role) > 0 && role.name !== '@everyone' && role.editable && role.name.indexOf('complete') === -1) {
 			eligibleRoles.push(role.name);
 		}
-	};
+	}
 	eligibleRoles.sort();
 	roleEmbed.setTitle('Available Role(s):');
 	roleEmbed.setDescription(eligibleRoles.join(', '));
-	if (receivedMessage.guild.name == 'BYU CS') {
+	if (receivedMessage.guild.name === 'BYU CS') {
 		roleEmbed.setFooter('Remember, there is also a "complete" variant of every class role!');
 	}
 	receivedMessage.channel.send(roleEmbed);
@@ -273,7 +273,7 @@ const gitPull = (context) => {
 	}
 	receivedMessage.react('👍');
 	exec(`git pull && pm2 restart kaiser || curl -H "Content-Type: application/json" -X POST -d '{"username": "Kaiser-Updater", "content": "Automatic update failed. Manual intervention required."}' https://discordapp.com/api/webhooks/729058198417440870/j4M63rmD8G233Dz09WdWX8UeoZmQRC3QRs_HV5f6MQe-gWE0CeZ0Wkb-XFsBNQ_UFsto`,
-		async (error, stdout, stderr) => {
+		async (error) => {
 			if (error) {
 				return sendError(receivedMessage, error);
 			}
@@ -313,10 +313,10 @@ const banish = async (context) => {
 	const whoToBanish = receivedMessage.mentions.users;
 
 	if (whoToBanish.size === 0) {
-		receivedMessage.react("🇼");
-		receivedMessage.react("🇭");
-		receivedMessage.react("🇴");
-		receivedMessage.react("❓");
+		await receivedMessage.react("🇼");
+		await receivedMessage.react("🇭");
+		await receivedMessage.react("🇴");
+		await receivedMessage.react("❓");
 		return;
 	}
 
@@ -364,7 +364,7 @@ const unbanish = async (context) => {
 	let receivedMessage = context.message;
 	let db = context.db;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
-		receivedMessage.channel.send(receivedMessage.author, {
+		await receivedMessage.channel.send(receivedMessage.author, {
 			files: ['./misc-files/no-power.gif']
 		});
 		return;
@@ -373,10 +373,10 @@ const unbanish = async (context) => {
 	const whoToUnbanish = receivedMessage.mentions.users;
 
 	if (whoToUnbanish.size === 0) {
-		receivedMessage.react("🇼");
-		receivedMessage.react("🇭");
-		receivedMessage.react("🇴");
-		receivedMessage.react("❓");
+		await receivedMessage.react("🇼");
+		await receivedMessage.react("🇭");
+		await receivedMessage.react("🇴");
+		await receivedMessage.react("❓");
 		return;
 	}
 	

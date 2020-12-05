@@ -1,6 +1,7 @@
 const misc = require('./misc-commands/misc');
 const base = require('./base-commands/base');
 const hangman = require('./misc-commands/hangman');
+const tag = require('./misc-commands/tag')
 const events = require('./utility-commands/events');
 
 const commands = {
@@ -48,7 +49,10 @@ const commands = {
     'shadowban': base.banish,
     'unbanish': base.unbanish,
     'xkcd': misc.xkcd,
-    'event': events.event
+    'event': events.event,
+    'tag': tag.tag,
+    'untag': tag.untag,
+    'listtags': tag.listTags,
 }
 
 module.exports = commands;

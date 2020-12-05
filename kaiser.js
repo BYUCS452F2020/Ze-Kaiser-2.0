@@ -5,14 +5,13 @@ const security = require('./auth.json');
 const misc = require('./misc-commands/misc');
 const base = require('./base-commands/base');
 const starboard = require('./misc-commands/starboard');
-const hangman = require('./misc-commands/hangman');
+const tag = require('./misc-commands/tag')
 const filter = require('./utility-commands/chat-filter');
 const sqlite = require('./database/sqlite');
 const nosql = require('./database/nosql')
-const events = require('./utility-commands/events');
 const baseCommands = require('./commands.js');
 
-var messageBeingProcessed;
+let messageBeingProcessed;
 
 sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 	nosql.startDatabase("./nosql.json").then(async (nosqlDB) => {
@@ -27,7 +26,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 		})
 
 		setInterval(() => {
-			if (global.client.user === null || global.client.status == 5) {
+			if (global.client.user === null || global.client.status === 5) {
 				console.error('WATCHDOG: Discord User is not active, attempting restart...');
 				setTimeout(() => process.exit(1), 10000);
 			}
@@ -49,7 +48,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 
 			if (banishmentsPerChannel.has(receivedMessage.channel.id) &&
 					banishmentsPerChannel.get(receivedMessage.channel.id).has(receivedMessage.author.id)) {
-				receivedMessage.delete();
+				await receivedMessage.delete();
 				return;
 			}
 
@@ -60,7 +59,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 			else if (receivedMessage.mentions.has(client.user)) {
 				const why = client.emojis.cache.get('612697675996856362');
 				if (why && !receivedMessage.deleted) {
-					receivedMessage.react(why);
+					await receivedMessage.react(why);
 				}
 			}
 		});
@@ -71,7 +70,11 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					await reaction.fetch();
 				}
 				catch (error) {
-					errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
+					let errorMessage = {
+						content: 'Something went wrong when fetching the message!',
+						author: user,
+						channel: reaction.message.channel
+					};
 					base.sendError(errorMessage, error);
 					return;
 				}
@@ -81,7 +84,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 			}
 
 			misc.autoReact(reaction);
-			starboard.add(reaction, user);
+			await starboard.add(reaction, user);
 		});
 
 		client.on('messageReactionRemove', async (reaction, user) => {
@@ -90,7 +93,11 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					await reaction.fetch();
 				}
 				catch (error) {
-					errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
+					let errorMessage = {
+						content: 'Something went wrong when fetching the message!',
+						author: user,
+						channel: reaction.message.channel
+					};
 					base.sendError(errorMessage, error);
 					return;
 				}
@@ -99,7 +106,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 				return;
 			}
 
-			starboard.subtract(reaction, user);
+			await starboard.subtract(reaction, user);
 		});
 
 		const processCommand = (receivedMessage) => {
@@ -109,6 +116,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 				let primaryCommand = splitCommand[0] // The first word directly after the exclamation is the command
 				primaryCommand = primaryCommand.toLowerCase();  //make the command lower case to eliminate case sensitivity
 				let args = splitCommand.slice(1) // All other words are arguments/parameters/options for the command
+				let serverid = receivedMessage.guild.id;
 
 				if (misc.ignoredChannels.has(receivedMessage.channel) && primaryCommand !== 'startlistening') {
 					return;
@@ -122,12 +130,13 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					nosql: nosqlDB,
 				}
 
-				let customTag = false; // when we get noSQL, we check based on the server id if there's a custom tag with the primary command
-				if (customTag) {
-					// use any custom tags from the current server before checking builtin
-				}
-				else if (baseCommands[primaryCommand]) {
+				const foundTag = nosqlDB.get('tags').find({"serverID": serverid, "tag": primaryCommand}).value()
+
+
+				if (baseCommands[primaryCommand]) {
 					baseCommands[primaryCommand](context);
+				} else if (foundTag) {
+					tag.showTag(context)
 				}
 				else {
 					receivedMessage.channel.send('Invalid command.');
@@ -137,9 +146,9 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 			}
 		}
 
-		bot_secret_token = security.token;
+		let bot_secret_token = security.token;
 
-		client.login(bot_secret_token);
+		await client.login(bot_secret_token);
 	})
 });
 
