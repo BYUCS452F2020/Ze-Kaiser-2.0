@@ -12,14 +12,19 @@ const event = (context) => {
 
 	let command;
 	const results = paramMatches.map(m => m[1]);
-	if (!results.length) { // no event is named
+	if (!results.length) { // no event/task ID is given
 		command = initializers[args[0]];
 	}
-	else if (results.length === 1) {
-		command = (args[0] === "job" || args[0] === "task" || args[0] === "assignment") ? detailers[args.join('')] : detailers[args[0]];
-	}
 	else {
-		command = (args[0] === "assign") ? detailers[args[0]] : detailers[args.join('')];
+		if (/listjobs|jobs|joblist|tasks|assignments/.test(args[0])) {
+			command = detailers['tasklist'];
+		}
+		else if(/task|job|assignment/.test(args[1])) {
+			command = detailers['task' + args[0]];
+		}
+		else {
+			command = detailers[args[0]];
+		}
 	}
 
 	context.matches = results;
@@ -222,16 +227,20 @@ const joinEvent = (context) => {
 }
 
 const assign = (context) => {
-	const assignmentId = context.matches[0] || 1;
-	for(const userId of context.message.mentions.users.keyArray()) {
+	const assignmentID = context.matches[0] || 1;
+	for(const userID of context.message.mentions.users.keyArray()) {
 		const assigneeData = {
-			user_id: userId,
-			assignment_id: assignmentId,
+			user_id: userID,
+			assignment_id: assignmentID,
 			has_accepted: 0
 		}
 		sqlite.events.insertAssignee(context.db, assigneeData)
 	}
-	context.message.channel.send("consider them assigned.");
+	if (context.args[1].toLowerCase() == 'me') {
+		sqlite.events.insertAssignee(context.db, {user_id: context.message.author.id, assignment_id: assignmentID, has_accepted: 0});
+	}
+	// check if already assigned, check if sqlite failed to add
+	context.message.channel.send("They have now been assigned; remember, they still have to accept their assignment!");
 }
 
 const createTask = async (context) => {
@@ -303,9 +312,10 @@ const listAttendees = (context) => {
 
 			let message;
 			if(toDisplay.length) {
-				message += `Id: ${event_id}\nEvent: ${eventToDisplay.title}\n`;
+				message += `ID: ${event_id}\nEvent: ${eventToDisplay.title}\n`;
 
 				toDisplay.forEach(row => {
+					// fetch users so we can see their name
 					message += `user_id: ${row.user_id}\n`
 				});
 				context.message.channel.send(message);
@@ -329,12 +339,13 @@ const listAttendees = (context) => {
 const listAssignees = (context) => {
 	// this should probably be limited to only events from the server where the command is given
 	const assignment_id = context.matches[0];
-	const list = sqlite.events.getAssigneesForAssignment(context.db, assignment_id).then((assigneeResults) => {
+	sqlite.events.getAssigneesForAssignment(context.db, assignment_id).then((assigneeResults) => {
 		const toDisplay = assigneeResults;
 
 		if(toDisplay.length) {
-			let message;
+			let message = "";
 			toDisplay.forEach(row => {
+				// fetch users so we can get their names
 				message += `user_id: ${row.user_id}\n`
 			});
 			context.message.channel.send(message);
@@ -361,16 +372,9 @@ const detailers = {
 	'listassignees': listAssignees,
 	'assign': assign,
 	'taskcreate': createTask,
-	'jobcreate': createTask,
-	'assignmentcreate': createTask,
 	'taskedit': editTask,
-	'jobedit': editTask,
-	'assignmentedit': editTask,
-	'jobs': listTasks,
-	'joblist': listTasks,
-	'assignments': listTasks,
+	'tasklist': listTasks,
 	'edit': editEvent,
-	'create': createEvent,
 	'delete': removeEvent
 }
 

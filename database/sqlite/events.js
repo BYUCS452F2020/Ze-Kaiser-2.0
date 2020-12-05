@@ -78,6 +78,7 @@ const updateEvent = (db, event_id, updateData) => {
 
 const deleteEvent = (db, event_id) => {
     // definitely gonna need to do some admin checks on this one
+    // remove associated tasks as well
     return sqlite.run(db, 'DELETE FROM Event WHERE event_id = ?', [event_id]);
 }
 
@@ -89,12 +90,10 @@ attendeeData
 }
 */
 const insertAttendee = (db, attendeeData) => {
-    return (
-        sqlite.run(db, 'INSERT INTO Attendee(user_id, event_id) VALUES (?, ?)', [
+    return sqlite.run(db, 'INSERT INTO Attendee(user_id, event_id) VALUES (?, ?)', [
             attendeeData.user_id, 
             attendeeData.event_id
-        ])
-	);
+        ]);
 };
 
 const getAttendeesForEvent = async (db, event_id) => {
