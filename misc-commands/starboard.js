@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const moment = require('moment');
 const config = require('../config.json');
 
 const starEmoji = config.starEmoji;
@@ -88,6 +89,8 @@ async function applyStarboardMessage(message, subtract = false) {
 	}
 }
 
+let starOwn = moment(); // starts at bot lifetime
+let starBot = moment();
 const add = async (reaction, user) => {
 	const message = reaction.message;
 	if (reaction.emoji.name !== starEmoji) {
@@ -102,13 +105,21 @@ const add = async (reaction, user) => {
 	if (message.author.id === user.id) {
 		await reaction.users.remove(user); // Remove their star
 		// add timer
-		return message.channel.send(`${user}, you cannot star your own messages.`);
+		if (starOwn < moment()) {
+			starOwn.add(2, 'minutes');
+			return message.channel.send(`${user}, you cannot star your own messages.`);
+		}
+		return;
 	}
 
 	if (message.author.bot) {
 		await reaction.users.remove(user);
 		// add timer
-		return message.channel.send(`${user}, you cannot star bot messages.`);
+		if (starBot < moment()) {
+			starBot.add(2, 'minutes');
+			return message.channel.send(`${user}, you cannot star bot messages.`);
+		}
+		return;
 	}
 
 	await applyStarboardMessage(message);
