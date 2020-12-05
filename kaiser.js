@@ -121,7 +121,7 @@ sqlite.startDatabase("./db.sqlite").then(async (db) => {
 
 			let customTag = false; // when we get noSQL, we check based on the server id if there's a custom tag with the primary command
 			if (customTag) {
-				// use the custom tag first
+				// use any custom tags from the current server before checking builtin
 			}
 			else if (baseCommands[primaryCommand]) {
 				baseCommands[primaryCommand](context);
