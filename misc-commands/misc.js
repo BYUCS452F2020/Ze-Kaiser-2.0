@@ -11,7 +11,10 @@ tmp.setGracefulCleanup();
 let smited = new Set();
 let ignoredChannels = new Set();
 
-const meme = (receivedMessage, command, caption) => {
+const meme = (context) => {
+	let receivedMessage = context.message;
+	let command = context.primaryCommand;
+	let caption = context.args.join(' ');
 	if (!memeMap[command]) {
 		receivedMessage.channel.send('How did you do this?', {
 			files: ['./misc-files/is_that_legal.gif']
@@ -51,7 +54,8 @@ const autoReact = (messageReaction) => {
 	}
 }
 
-const smite = (receivedMessage) => {
+const smite = (context) => {
+	let receivedMessage = context.message;
 	if (!receivedMessage.mentions.users.first()) {
 		meme(receivedMessage, 'illegal');
 		return;
@@ -83,7 +87,8 @@ const smite = (receivedMessage) => {
 	}
 }
 
-const unsmite = (receivedMessage) => {
+const unsmite = (context) => {
+	let receivedMessage = context.message;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(`What, *exactly*, do you think you\'re doing, ${receivedMessage.author}?`);
 		return;
@@ -100,7 +105,8 @@ const unsmite = (receivedMessage) => {
 	}
 }
 
-const avatar = (receivedMessage) => {
+const avatar = (context) => {
+	let receivedMessage = context.message;
 	if (!receivedMessage.mentions.users.size) {
 		let embed = new Discord.MessageEmbed()
 			.setImage(receivedMessage.author.displayAvatarURL({dynamic: true}))
@@ -122,7 +128,8 @@ const avatar = (receivedMessage) => {
 	});
 }
 
-const warning = (receivedMessage) => {
+const warning = (context) => {
+	let receivedMessage = context.message;
 	if (!receivedMessage.member) {
 		receivedMessage.channel.send('Why are you trying this command here?')
 		.catch((err) => {
@@ -155,7 +162,8 @@ const checkVideo = (url) => {
 }
 
 const urlRegex = /(https?|ftp):\/\/[^\s\/$.?#].[^\s]*/;
-const vidtogif = async (message) => {
+const vidtogif = async (context) => {
+	let message = context.message;
 	let image = '';
 
 	if (message.attachments.size > 0) {
@@ -245,14 +253,10 @@ const vidtogif = async (message) => {
 		});
 }
 
-const startListening = (receivedMessage, channel) => {
+const startListening = (context) => {
+	let receivedMessage = context.message;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(`Why must you be like this, ${receivedMessage.author}?`);
-		return;
-	}
-	
-	if (channel) {
-		ignoredChannels.delete(channel);
 		return;
 	}
 
@@ -263,7 +267,10 @@ const startListening = (receivedMessage, channel) => {
 	});
 }
 
-const stopListening = (receivedMessage, timeout = 0) => {
+const stopListening = (context) => {
+	let receivedMessage = context.message;
+	let timeout = receivedMessage.args || 0;
+
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(`You can't tell me what to do, ${receivedMessage.author}!`);
 		return;
@@ -295,7 +302,9 @@ const getXkcdComicInfo = async (num) => {
 		return response.data;
 }
 
-const xkcd = async (receivedMessage, args) => {
+const xkcd = async (context) => {
+	let receivedMessage = context.message;
+	let args = context.args;
 	const requestedComic = (args[0] || "").trim();
 	if (!requestedComic) {
 		// no input

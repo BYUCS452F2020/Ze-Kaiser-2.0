@@ -163,7 +163,8 @@ class EvilHangmanGame {
 const hsetMap = new Map();
 class NoResponseException {}
 
-const hset = async (receivedMessage) => {
+const hset = async (context) => {
+	let receivedMessage = context.message;
 	const author = receivedMessage.author.id;
 	const promise = hsetMap.get(author);
 	if (promise) {
@@ -215,7 +216,9 @@ function randomInt(min, max) {
 
 const activeGames = new Map();
 
-const hangman = async (receivedMessage, args) => {
+const hangman = async (context) => {
+	let receivedMessage = context.message;
+	let args = context.args;
 	try {
 		let currentGame = activeGames.get(receivedMessage.channel.id);
 		if (currentGame) {
@@ -277,7 +280,9 @@ const hangman = async (receivedMessage, args) => {
 	}
 }
 
-const guess = async (receivedMessage, args) => {
+const guess = async (context) => {
+	let receivedMessage = context.message;
+	let args = context.args;
 	try {
 		let currentGame = activeGames.get(receivedMessage.channel.id);
 		if (!currentGame) {

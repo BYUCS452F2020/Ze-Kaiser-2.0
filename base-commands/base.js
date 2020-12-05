@@ -2,23 +2,25 @@ const config = require('../config.json');
 const { exec } = require('child_process');
 const sqlite = require("../database/sqlite");
 
-const complete = (receivedMessage, args) => {
+const complete = (context) => {
+	let args = context.args;
+	let receivedMessage = context.message;
 	let roles = args.join(' ').split(',').map(x => x.trim());
 	if (roles.length > 1) {
-		removeRoles(receivedMessage, args).then(() => {
+		removeRoles(context).then(() => {
 			roles = roles.map(role => role + ' complete,');
 			roles[roles.length - 1] = roles[roles.length - 1].slice(0, -1);
 			roles = roles.join(' ').split(' ');
-			addRoles(receivedMessage, roles);
+			addRoles(context);
 		})
 		.catch((err) => {
 			sendError(receivedMessage, err);
 		});
 	}
 	else {
-		removeRole(receivedMessage, args).then(() => {
+		removeRole(context).then(() => {
 			args.push('complete');
-			addRole(receivedMessage, args);
+			addRole(context);
 		})
 		.catch((err) => {
 			sendError(receivedMessage, err);
@@ -26,7 +28,9 @@ const complete = (receivedMessage, args) => {
 	}
 }
 
-const addRole = (receivedMessage, role) => {
+const addRole = (context) => {
+	let receivedMessage = context.message;
+	let role = context.args;
 	if (!role.length) {
 		receivedMessage.channel.send('I need a role to try to add!');
 		return;
@@ -64,7 +68,9 @@ const addRole = (receivedMessage, role) => {
 	}
 }
 
-const addRoles = (receivedMessage, roles) => {
+const addRoles = (context) => {
+	let receivedMessage = context.message;
+	let roles = context.args;
 	if (!roles.length) {
 		receivedMessage.channel.send('I need some roles to try to add!');
 		return;
@@ -108,7 +114,9 @@ const addRoles = (receivedMessage, roles) => {
 	});
 }
 
-const removeRole = (receivedMessage, role) => {
+const removeRole = (context) => {
+	let receivedMessage = context.message;
+	let role = context.args;
 	if (!role.length) {
 		receivedMessage.channel.send('I need a role to try to remove!');
 		return;
@@ -140,7 +148,9 @@ const removeRole = (receivedMessage, role) => {
 	}
 }
 
-const removeRoles = (receivedMessage, roles) => {
+const removeRoles = (context) => {
+	let receivedMessage = context.message;
+	let roles = context.args;
 	if (!roles.length) {
 		receivedMessage.channel.send('I need some roles to try to remove!');
 		return;
@@ -192,7 +202,9 @@ const removeRoles = (receivedMessage, roles) => {
 	});
 }
 
-const info = (receivedMessage, channel) => {
+const info = (context) => {
+	let receivedMessage = context.message;
+	let channel = context.args;
 	const mentionedChannel = receivedMessage.mentions.channels.first()
 	if (!channel || !mentionedChannel) {
 		receivedMessage.channel.send('I can\'t give information about nothing!');
@@ -223,7 +235,8 @@ const info = (receivedMessage, channel) => {
 	}
 }
 
-const help = (receivedMessage) => {
+const help = (context) => {
+	let receivedMessage = context.message;
 	let allCommands = require('./help.json');
 
 	let helpEmbed = new Discord.MessageEmbed().setColor('#2295d4');
@@ -234,7 +247,8 @@ const help = (receivedMessage) => {
 	receivedMessage.channel.send(helpEmbed);
 }
 
-const roles = (receivedMessage) => {
+const roles = (context) => {
+	let receivedMessage = context.message;
 	let botHighestRole = receivedMessage.guild.me.roles.highest;
 	let roleEmbed = new Discord.MessageEmbed().setColor('#2295d4');
 	let eligibleRoles = [];
@@ -252,7 +266,8 @@ const roles = (receivedMessage) => {
 	receivedMessage.channel.send(roleEmbed);
 }
 
-const gitPull = (receivedMessage) => {
+const gitPull = (context) => {
+	let receivedMessage = context.message;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		return;
 	}
@@ -285,7 +300,9 @@ const sendError = (receivedMessage, err) => {
 	});
 }
 
-const banish = async (receivedMessage, db, broadcast) => { 
+const banish = async (context) => {
+	let receivedMessage = context.message;
+	let db = context.db;
 	// only admins can banish
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(receivedMessage.author, {
@@ -334,7 +351,7 @@ const banish = async (receivedMessage, db, broadcast) => {
 	const names = Array.from(whoToBanish.values()).map(u => u.tag);
 	const ids = Array.from(whoToBanish.keys());
 	console.log(`Banishing ${names.join(", ")} from channel #${receivedMessage.channel.name}`);
-	if (broadcast) {
+	if (context.primaryCommand !== "shadowban") {
 		receivedMessage.channel.send("Begone " + Array.from(whoToBanish.values()).join(" "));
 	}
 	
@@ -343,7 +360,9 @@ const banish = async (receivedMessage, db, broadcast) => {
 	return await sqlite.getChannelsAndBanishments(db);
 }
 
-const unbanish = async (receivedMessage, db) => {
+const unbanish = async (context) => {
+	let receivedMessage = context.message;
+	let db = context.db;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(receivedMessage.author, {
 			files: ['./misc-files/no-power.gif']

@@ -21,9 +21,9 @@ const filter = (receivedMessage) => {
 			});
 
 			let modEmbed = new Discord.MessageEmbed().setColor('#F69400');
-			modEmbed.setTitle('Glitch in the Matrix');
+			modEmbed.setTitle('Press "Y" to Shame');
 			if (receivedMessage) {
-				modEmbed.addField('Message:', receivedMessage.content);
+				modEmbed.addField('Message:', '||' + receivedMessage.content + '||');
 				modEmbed.addField('Guilty User:', receivedMessage.author);
 				modEmbed.addField('Channel:', receivedMessage.channel);
 				if (receivedMessage.guild) {
@@ -33,7 +33,9 @@ const filter = (receivedMessage) => {
 			}
 
 			if (modChannel) {
-				modChannel.send(modEmbed);
+				modChannel.send(modEmbed).then(message => {
+					message.react('🇾');
+				});
 			}
 			else {
 				config.administrators.forEach(userID => {

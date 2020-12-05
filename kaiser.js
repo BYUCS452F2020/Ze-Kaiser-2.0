@@ -118,105 +118,16 @@ sqlite.startDatabase("./db.sqlite").then(async (db) => {
 				primaryCommand,
 				db
 			}
-	
-			switch(primaryCommand) {
-				case 'cooldudes':
-				case 'bamboozled':
-				case 'illegal':
-				case 'ontopic':
-				case 'bigbean':
-				case 'bigbrain':
-				case 'kronk':
-				case 'comingtogether':
-				case 'dewit':
-				case 'doit':
-				case 'thoughtpolice':
-				case 'enjoythings':
-				case 'gasp':
-				case 'whoknew':
-				case 'patience':
-				case 'whomst':
-				case 'itsatrap':
-				case 'facepalm':
-				case 'ironic':
-					misc.meme(receivedMessage, primaryCommand, args.join(' '));
-					break;
-				case 'addrole':
-					base.addRole(receivedMessage, args);
-					break;
-				case 'removerole':
-					base.removeRole(receivedMessage, args);
-					break;
-				case 'addroles':
-					base.addRoles(receivedMessage, args);
-					break;
-				case 'removeroles':
-					base.removeRoles(receivedMessage, args);
-					break;
-				case 'complete':
-					base.complete(receivedMessage, args);
-					break;
-				case 'info':
-					base.info(receivedMessage, args);
-					break;
-				case 'help':
-					base.help(receivedMessage);
-					break;
-				case 'roles':
-					base.roles(receivedMessage);
-					break;
-				case 'smite':
-					misc.smite(receivedMessage);
-					break;
-				case 'unsmite':
-					misc.unsmite(receivedMessage);
-					break;
-				case 'tothegallows':
-					hangman.hangman(receivedMessage, args);
-					break;
-				case 'guess':
-					hangman.guess(receivedMessage, args);
-					break;
-				case 'hset':
-					hangman.hset(receivedMessage);
-					break;
-				case 'avatar':
-					misc.avatar(receivedMessage);
-					break;
-				case 'buhgok':
-				case 'warning':
-					misc.warning(receivedMessage);
-					break;
-				case 'makegif':
-					misc.vidtogif(receivedMessage);
-					break;
-				case 'startlistening':
-					misc.startListening(receivedMessage);
-					break;
-				case 'stoplistening':
-					misc.stopListening(receivedMessage, args);
-					break;
-				case 'pull':
-				case 'gitpull':
-					base.gitPull(receivedMessage);
-					break;
-				case 'banish':
-					base.banish(receivedMessage, db, true);
-					break;
-				case 'shadowban':
-					base.banish(receivedMessage, db, false);
-					break;
-				case 'unbanish':
-					base.unbanish(receivedMessage, db);
-					break;
-				case 'xkcd':
-					misc.xkcd(receivedMessage, args);
-					break;
-				case 'event':
-					events.event(context);
-					break;
-				default:
-					receivedMessage.channel.send('Invalid command.');
+
+			let customTag = false; // when we get noSQL, we check based on the server id if there's a custom tag with the primary command
+			if (customTag) {
+
+			}
+			else if (baseCommands[primaryCommand]) {
+				baseCommands[primaryCommand](context);
+			}
+			else {
+				receivedMessage.channel.send('Invalid command.');
 			}
 		} catch (err) {
 			base.sendError(receivedMessage, err);
