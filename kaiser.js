@@ -8,135 +8,139 @@ const starboard = require('./misc-commands/starboard');
 const hangman = require('./misc-commands/hangman');
 const filter = require('./utility-commands/chat-filter');
 const sqlite = require('./database/sqlite');
+const nosql = require('./database/nosql')
 const events = require('./utility-commands/events');
 const baseCommands = require('./commands.js');
 
 var messageBeingProcessed;
 
-sqlite.startDatabase("./db.sqlite").then(async (db) => {
-	client.on('ready', () => {
-		console.log('Connected as ' + client.user.tag);
-	});
-	
-	client.on('error', () => {
-		// Oh no, let's try restarting
-		console.error('Encountered an error establishing a connection to Discord, restarting...');
-		setTimeout(() => process.exit(1), 10000);
-	})
-	
-	setInterval(() => {
-		if (global.client.user === null || global.client.status == 5) {
-			console.error('WATCHDOG: Discord User is not active, attempting restart...');
+sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
+	nosql.startDatabase("./nosql.json").then(async (nosqlDB) => {
+		client.on('ready', () => {
+			console.log('Connected as ' + client.user.tag);
+		});
+
+		client.on('error', () => {
+			// Oh no, let's try restarting
+			console.error('Encountered an error establishing a connection to Discord, restarting...');
 			setTimeout(() => process.exit(1), 10000);
-		}
-	}, 10000);
-	
-	client.on('message', async (receivedMessage) => {
-		if (receivedMessage.author !== client.user && !filter.filter(receivedMessage)) {
-			return;
-		}
-		if (receivedMessage.author === client.user || misc.smited.has(receivedMessage.author)) {   //Make sure the bot doesn't respond to itself, otherwise weird loopage may occur
-			return;
-		}
+		})
 
-		if (receivedMessage.guild === null) {
-			return;
-		}
-
-		const banishmentsPerChannel = await sqlite.getChannelsAndBanishments(db);
-
-		if (banishmentsPerChannel.has(receivedMessage.channel.id) &&
-				banishmentsPerChannel.get(receivedMessage.channel.id).has(receivedMessage.author.id)) {
-			receivedMessage.delete();
-			return;
-		}
-	
-		if (receivedMessage.content.startsWith('!')) {
-			messageBeingProcessed = receivedMessage;
-			await processCommand(receivedMessage);
-		}
-		else if (receivedMessage.mentions.has(client.user)) {
-			const why = client.emojis.cache.get('612697675996856362');
-			if (why && !receivedMessage.deleted) {
-				receivedMessage.react(why);
+		setInterval(() => {
+			if (global.client.user === null || global.client.status == 5) {
+				console.error('WATCHDOG: Discord User is not active, attempting restart...');
+				setTimeout(() => process.exit(1), 10000);
 			}
-		}
-	});
-	
-	client.on('messageReactionAdd', async (reaction, user) => {
-		if (reaction.partial) {
+		}, 10000);
+
+		client.on('message', async (receivedMessage) => {
+			if (receivedMessage.author !== client.user && !filter.filter(receivedMessage)) {
+				return;
+			}
+			if (receivedMessage.author === client.user || misc.smited.has(receivedMessage.author)) {   //Make sure the bot doesn't respond to itself, otherwise weird loopage may occur
+				return;
+			}
+
+			if (receivedMessage.guild === null) {
+				return;
+			}
+
+			const banishmentsPerChannel = await sqlite.getChannelsAndBanishments(sqliteDB);
+
+			if (banishmentsPerChannel.has(receivedMessage.channel.id) &&
+					banishmentsPerChannel.get(receivedMessage.channel.id).has(receivedMessage.author.id)) {
+				receivedMessage.delete();
+				return;
+			}
+
+			if (receivedMessage.content.startsWith('!')) {
+				messageBeingProcessed = receivedMessage;
+				await processCommand(receivedMessage);
+			}
+			else if (receivedMessage.mentions.has(client.user)) {
+				const why = client.emojis.cache.get('612697675996856362');
+				if (why && !receivedMessage.deleted) {
+					receivedMessage.react(why);
+				}
+			}
+		});
+
+		client.on('messageReactionAdd', async (reaction, user) => {
+			if (reaction.partial) {
+				try {
+					await reaction.fetch();
+				}
+				catch (error) {
+					errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
+					base.sendError(errorMessage, error);
+					return;
+				}
+			}
+			if (reaction.message.guild === null || misc.smited.has(reaction.message.author)) {
+				return;
+			}
+
+			misc.autoReact(reaction);
+			starboard.add(reaction, user);
+		});
+
+		client.on('messageReactionRemove', async (reaction, user) => {
+			if (reaction.partial) {
+				try {
+					await reaction.fetch();
+				}
+				catch (error) {
+					errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
+					base.sendError(errorMessage, error);
+					return;
+				}
+			}
+			if (reaction.message.guild === null) {
+				return;
+			}
+
+			starboard.subtract(reaction, user);
+		});
+
+		const processCommand = (receivedMessage) => {
 			try {
-				await reaction.fetch();
-			}
-			catch (error) {
-				errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
-				base.sendError(errorMessage, error);
-				return;
-			}
-		}
-		if (reaction.message.guild === null || misc.smited.has(reaction.message.author)) {
-			return;
-		}
-	
-		misc.autoReact(reaction);
-		starboard.add(reaction, user);
-	});
-	
-	client.on('messageReactionRemove', async (reaction, user) => {
-		if (reaction.partial) {
-			try {
-				await reaction.fetch();
-			}
-			catch (error) {
-				errorMessage = {content: 'Something went wrong when fetching the message!', author: user, channel: reaction.message.channel};
-				base.sendError(errorMessage, error);
-				return;
-			}
-		}
-		if (reaction.message.guild === null) {
-			return;
-		}
-	
-		starboard.subtract(reaction, user);
-	});
-	
-	const processCommand = (receivedMessage) => {
-		try {
-			let fullCommand = receivedMessage.content.substr(1) // Remove the leading character
-			let splitCommand = fullCommand.split(" ") // Split the message up in to pieces for each space
-			let primaryCommand = splitCommand[0] // The first word directly after the exclamation is the command
-			primaryCommand = primaryCommand.toLowerCase();  //make the command lower case to eliminate case sensitivity
-			let args = splitCommand.slice(1) // All other words are arguments/parameters/options for the command
-	
-			if (misc.ignoredChannels.has(receivedMessage.channel) && primaryCommand !== 'startlistening') {
-				return;
-			}
+				let fullCommand = receivedMessage.content.substr(1) // Remove the leading character
+				let splitCommand = fullCommand.split(" ") // Split the message up in to pieces for each space
+				let primaryCommand = splitCommand[0] // The first word directly after the exclamation is the command
+				primaryCommand = primaryCommand.toLowerCase();  //make the command lower case to eliminate case sensitivity
+				let args = splitCommand.slice(1) // All other words are arguments/parameters/options for the command
 
-			let context = { // to be used to get rid of the big nasty switch statement below
-				message: receivedMessage,
-				args,
-				primaryCommand,
-				db
-			}
+				if (misc.ignoredChannels.has(receivedMessage.channel) && primaryCommand !== 'startlistening') {
+					return;
+				}
 
-			let customTag = false; // when we get noSQL, we check based on the server id if there's a custom tag with the primary command
-			if (customTag) {
-				// use any custom tags from the current server before checking builtin
+				let context = { // to be used to get rid of the big nasty switch statement below
+					message: receivedMessage,
+					args,
+					primaryCommand,
+					db: sqliteDB,
+					nosql: nosqlDB,
+				}
+
+				let customTag = false; // when we get noSQL, we check based on the server id if there's a custom tag with the primary command
+				if (customTag) {
+					// use any custom tags from the current server before checking builtin
+				}
+				else if (baseCommands[primaryCommand]) {
+					baseCommands[primaryCommand](context);
+				}
+				else {
+					receivedMessage.channel.send('Invalid command.');
+				}
+			} catch (err) {
+				base.sendError(receivedMessage, err);
 			}
-			else if (baseCommands[primaryCommand]) {
-				baseCommands[primaryCommand](context);
-			}
-			else {
-				receivedMessage.channel.send('Invalid command.');
-			}
-		} catch (err) {
-			base.sendError(receivedMessage, err);
 		}
-	}
-	
-	bot_secret_token = security.token;
-	
-	client.login(bot_secret_token);
+
+		bot_secret_token = security.token;
+
+		client.login(bot_secret_token);
+	})
 });
 
 // LAST DITCH ERROR HANDLING; Is technically deprecated, care for future
