@@ -11,7 +11,7 @@ const init = (context) => {
             context.nosql.get('config')
                 .push({
                     serverID: guildId, config: {
-                        "administrators": [guild.owner.id],
+                        "administrators": [guild.ownerID],
 
                         "starEmoji": "⭐",
                         "starEmbedColor": 15844367,
