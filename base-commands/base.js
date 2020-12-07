@@ -398,6 +398,21 @@ const unbanish = async (context) => {
 	receivedMessage.channel.send("You may return, " + Array.from(whoToUnbanish.values()).join(" "));
 }
 
+const viewConfig = async(context) => {
+	const config = getConfig(context.message.guild.id, context.nosql)
+
+	let receivedMessage = context.message;
+
+	if (!config.administrators.includes(receivedMessage.author.id)) {
+		await receivedMessage.channel.send(receivedMessage.author, {
+			files: ['./misc-files/no-power.gif']
+		});
+		return;
+	}
+
+	receivedMessage.channel.send(JSON.stringify(config, null, 4));
+}
+
 module.exports = {
 	complete,
 	addRole,
@@ -410,5 +425,6 @@ module.exports = {
 	gitPull,
 	sendError,
 	banish,
-	unbanish
+	unbanish,
+	viewConfig,
 };

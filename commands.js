@@ -53,6 +53,7 @@ const commands = {
     'tag': tag.tag,
     'untag': tag.untag,
     'listtags': tag.listTags,
+    'viewconfig': base.viewConfig,
 }
 
 module.exports = commands;

@@ -310,13 +310,19 @@ const listAttendees = (context) => {
 			const eventToDisplay = eventResult;
 			const toDisplay = attendeeResults;
 
-			let message;
+			let message = "";
 			if(toDisplay.length) {
 				message += `ID: ${event_id}\nEvent: ${eventToDisplay.title}\n`;
 
 				toDisplay.forEach(row => {
 					// fetch users so we can see their name
-					message += `user_id: ${row.user_id}\n`
+					const User = client.users.cache.get(row.user_id);
+					if (User) {
+						message += `${User.username}\n`
+					}
+					else {
+						message += `user_id: ${row.user_id}\n`
+					}
 				});
 				context.message.channel.send(message);
 			}
@@ -346,7 +352,13 @@ const listAssignees = (context) => {
 			let message = "";
 			toDisplay.forEach(row => {
 				// fetch users so we can get their names
-				message += `user_id: ${row.user_id}\n`
+				const User = client.users.cache.get(row.user_id);
+				if (User) {
+					message += `${User.username}\n`
+				}
+				else {
+					message += `user_id: ${row.user_id}\n`
+				}
 			});
 			context.message.channel.send(message);
 		}
