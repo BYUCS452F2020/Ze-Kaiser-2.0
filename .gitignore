@@ -3,5 +3,4 @@ package-lock.json
 auth.json
 db.sqlite
 nosql.json
-config.json
 .idea/

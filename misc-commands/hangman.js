@@ -1,5 +1,5 @@
 const base = require('../base-commands/base');
-const config = require('../config.json');
+const { getConfig } = require('../utils');
 const fs = require('fs');
 
 // Read in the dictionary
@@ -184,8 +184,9 @@ function setHMap(receivedMessage, value) {
 	hsetMap.set(author, value);
 }
 
-async function getClarification(receivedMessage, acceptFn, beginMessage, rejectMessage) {
+async function getClarification(receivedMessage, acceptFn, beginMessage, rejectMessage, config) {
 	await receivedMessage.reply(beginMessage);
+
 	for (let i = 0; i < config.retryCount; ++i) {
 		const message = await new Promise((resolve, reject) => setHMap(receivedMessage, {resolve, reject}));
 
@@ -218,6 +219,7 @@ const activeGames = new Map();
 
 const hangman = async (context) => {
 	let receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
 	let args = context.args;
 	try {
 		let currentGame = activeGames.get(receivedMessage.channel.id);
@@ -237,7 +239,8 @@ const hangman = async (context) => {
 			const wordLengthMsg = await getClarification(receivedMessage,
 				msg => validWordLengths.has(getInt(msg)),
 				`How long of a word do you want? (!hset [${Math.min(...validWordLengths)}-${Math.max(...validWordLengths)}])`,
-				`Sorry, I don't have any words of that length ${client.emojis.cache.get('626104347813740586')}\nTry giving me a valid length.`);
+				`Sorry, I don't have any words of that length ${client.emojis.cache.get('626104347813740586')}\nTry giving me a valid length.`,
+				config);
 
 			const guessesMsg = await getClarification(receivedMessage,
 				msg => {
@@ -245,7 +248,8 @@ const hangman = async (context) => {
 					return n > 0 && n < 26;
 				},
 				`How many guesses do you want? (!hset [1-25])`,
-				`That's not within the range [1-25].\nTry giving me a valid count.`);
+				`That's not within the range [1-25].\nTry giving me a valid count.`,
+				config);
 
 			wordLength = getInt(wordLengthMsg);
 			guesses = getInt(guessesMsg);
@@ -300,12 +304,12 @@ const guess = async (context) => {
 			return;
 		}
 
-		if (args[0].length != 1) {
+		if (args[0].length !== 1) {
 			return receivedMessage.reply('Only 1 letter please! (e.g `!guess x`)');
 		}
 
 		if (currentGame.guessedLetters.has(args[0])) {
-			return receivedMessage.reply(`That letter has already been guessed. ${client.emojis.cache.get('623553767467384832')}`);
+			return receivedMessage.reply(`That letter has already been guessed. ${client.emojis.cache.get('623553767467384832') || ''}`);
 		}
 
 		currentGame.makeGuess(args[0]);

@@ -10,6 +10,7 @@ const filter = require('./utility-commands/chat-filter');
 const sqlite = require('./database/sqlite');
 const nosql = require('./database/nosql')
 const baseCommands = require('./commands.js');
+const config = require('./base-commands/config');
 
 let messageBeingProcessed;
 
@@ -17,6 +18,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 	nosql.startDatabase("./nosql.json").then(async (nosqlDB) => {
 		client.on('ready', () => {
 			console.log('Connected as ' + client.user.tag);
+			config.init({nosql: nosqlDB, guilds: client.guilds})
 		});
 
 		client.on('error', () => {
@@ -33,7 +35,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 		}, 10000);
 
 		client.on('message', async (receivedMessage) => {
-			if (receivedMessage.author !== client.user && !filter.filter(receivedMessage)) {
+			if (receivedMessage.author !== client.user && !filter.filter({message: receivedMessage, nosql: nosqlDB})) {
 				return;
 			}
 			if (receivedMessage.author === client.user || misc.smited.has(receivedMessage.author)) {   //Make sure the bot doesn't respond to itself, otherwise weird loopage may occur
@@ -75,7 +77,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 						author: user,
 						channel: reaction.message.channel
 					};
-					base.sendError(errorMessage, error);
+					base.sendError({message: errorMessage, nosql: nosqlDB}, error);
 					return;
 				}
 			}
@@ -83,8 +85,15 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 				return;
 			}
 
-			misc.autoReact(reaction);
-			await starboard.add(reaction, user);
+			misc.autoReact({
+				reaction,
+				nosql: nosqlDB
+			});
+			await starboard.add({
+				reaction,
+				user,
+				nosql: nosqlDB
+			});
 		});
 
 		client.on('messageReactionRemove', async (reaction, user) => {
@@ -98,15 +107,18 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 						author: user,
 						channel: reaction.message.channel
 					};
-					base.sendError(errorMessage, error);
+					base.sendError({message: errorMessage, nosql: nosqlDB}, error);
 					return;
 				}
 			}
 			if (reaction.message.guild === null) {
 				return;
 			}
-
-			await starboard.subtract(reaction, user);
+			await starboard.subtract({
+				reaction,
+				user,
+				nosql: nosqlDB
+			});
 		});
 
 		const processCommand = (receivedMessage) => {
@@ -122,7 +134,7 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					return;
 				}
 
-				let context = { // to be used to get rid of the big nasty switch statement below
+				let context = {
 					message: receivedMessage,
 					args,
 					primaryCommand,
@@ -131,7 +143,6 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 				}
 
 				const foundTag = nosqlDB.get('tags').find({"serverID": serverid, "tag": primaryCommand}).value()
-
 
 				if (baseCommands[primaryCommand]) {
 					baseCommands[primaryCommand](context);
@@ -142,26 +153,26 @@ sqlite.startDatabase("./db.sqlite").then(async (sqliteDB) => {
 					receivedMessage.channel.send('Invalid command.');
 				}
 			} catch (err) {
-				base.sendError(receivedMessage, err);
+				base.sendError({message: receivedMessage, nosql: nosqlDB}, err);
 			}
 		}
+
+		// LAST DITCH ERROR HANDLING; Is technically deprecated, care for future
+		process.on("unhandledRejection", (err) => {
+			if (client.uptime > 0) {
+				base.sendError({message: messageBeingProcessed, nosql: nosqlDB}, err);
+			}
+			messageBeingProcessed = undefined;
+		});
+		process.on("uncaughtException", (err) => {
+			if (client.uptime > 0) {
+				base.sendError({message: messageBeingProcessed, nosql: nosqlDB}, err);
+			}
+			messageBeingProcessed = undefined;
+		});
 
 		let bot_secret_token = security.token;
 
 		await client.login(bot_secret_token);
 	})
-});
-
-// LAST DITCH ERROR HANDLING; Is technically deprecated, care for future
-process.on("unhandledRejection", (err) => {
-	if (client.uptime > 0) {
-		base.sendError(messageBeingProcessed, err);
-	}
-	messageBeingProcessed = undefined;
-});
-process.on("uncaughtException", (err) => {
-	if (client.uptime > 0) {
-		base.sendError(messageBeingProcessed, err);
-	}
-	messageBeingProcessed = undefined;
 });

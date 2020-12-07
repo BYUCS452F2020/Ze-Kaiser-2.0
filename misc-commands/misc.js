@@ -3,7 +3,7 @@ const { exec } = require('child_process');
 const fs = require("fs");
 const tmp = require('tmp-promise');
 const base = require('../base-commands/base');
-const config = require('../config.json');
+const {getConfig} = require('../utils');
 const memeMap = require('../misc-files/memeMap');
 
 tmp.setGracefulCleanup();
@@ -35,8 +35,10 @@ const meme = (context) => {
 	});
 }
 
-const autoReact = (messageReaction) => {
-	if (messageReaction.me || messageReaction.message.author == client.user ||
+const autoReact = (context) => {
+	const messageReaction = context.reaction;
+	const config = getConfig(context.reaction.message.guild.id, context.nosql)
+	if (messageReaction.me || messageReaction.message.author === client.user ||
 		messageReaction.count > 1 || messageReaction.emoji.name === config.starEmoji) {
 		return;
 	}
@@ -56,6 +58,7 @@ const autoReact = (messageReaction) => {
 
 const smite = (context) => {
 	let receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
 	if (!receivedMessage.mentions.users.first()) {
 		meme(receivedMessage, 'illegal');
 		return;
@@ -89,6 +92,7 @@ const smite = (context) => {
 
 const unsmite = (context) => {
 	let receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(`What, *exactly*, do you think you\'re doing, ${receivedMessage.author}?`);
 		return;
@@ -164,6 +168,8 @@ const checkVideo = (url) => {
 const urlRegex = /(https?|ftp):\/\/[^\s\/$.?#].[^\s]*/;
 const vidtogif = async (context) => {
 	let message = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	let image = '';
 
 	if (message.attachments.size > 0) {
@@ -255,6 +261,8 @@ const vidtogif = async (context) => {
 
 const startListening = (context) => {
 	let receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(`Why must you be like this, ${receivedMessage.author}?`);
 		return;
@@ -269,6 +277,8 @@ const startListening = (context) => {
 
 const stopListening = (context) => {
 	let receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	let timeout = receivedMessage.args || 0;
 
 	if (!config.administrators.includes(receivedMessage.author.id)) {
@@ -292,11 +302,11 @@ const stopListening = (context) => {
 	}
 }
 
-const getXkcdComicInfo = async (num) => {
+const getXkcdComicInfo = async (num, context) => {
 	const response = await axios.get(`https://xkcd.com/${num}/info.0.json`);
 		if (response.status !== 200) {
 			// send error
-			base.sendError(receivedMessage, `Failed to get comic #${num}\n${response.status}: ${response.statusText}`)
+			base.sendError(context, `Failed to get comic #${num}\n${response.status}: ${response.statusText}`)
 			return;
 		}
 		return response.data;
@@ -318,7 +328,7 @@ const xkcd = async (context) => {
 	else if (/^\d+$/.test(requestedComic)) {
 		num = requestedComic;
 	} else if (requestedComic === "random") {
-		const latest = await getXkcdComicInfo("");
+		const latest = await getXkcdComicInfo("", context);
 		num = Math.floor(Math.random() * (latest.num + 1));
 	} else {
 		receivedMessage.channel.send(`"${requestedComic}" isn't a number or "random".`);
@@ -328,7 +338,7 @@ const xkcd = async (context) => {
 		receivedMessage.channel.send("Error 404: comic not found");
 		return;
 	}
-	const comic = await getXkcdComicInfo(num);
+	const comic = await getXkcdComicInfo(num, context);
 
 	const comicEmbed = new Discord.MessageEmbed()
 		.setColor('#1A73E8')

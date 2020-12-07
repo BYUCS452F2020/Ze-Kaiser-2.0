@@ -1,10 +1,10 @@
 const base = require('../base-commands/base');
-const config = require('../config.json');
 
 // I promise this is for a good cause!
 const vulgarity = ['damn', 'shit', 'fuck', 'bitch', 'cunt', 'nigger', 'bastard', 'dick', 'pussy', 'fakenaughtyword'];
 
-const filter = (receivedMessage) => {
+const filter = (context) => {
+	const receivedMessage = context.message;
 	if (!receivedMessage.guild) {
 		return false;
 	}
@@ -38,6 +38,9 @@ const filter = (receivedMessage) => {
 				});
 			}
 			else {
+				const config = context.nosql.get('config')
+					.find({serverID: context.message.guild.id})
+					.value().config
 				config.administrators.forEach(userID => {
 					client.users.fetch(userID).then((user) => {
 						user.send(modEmbed);

@@ -1,10 +1,5 @@
 const Discord = require('discord.js');
 const moment = require('moment');
-const config = require('../config.json');
-
-const starEmoji = config.starEmoji;
-const embedColor = config.starEmbedColor;
-const minCount = config.starMinCount || 1;
 
 function processAttachment(attachment) {
 	const imageLink = attachment.split('.');
@@ -16,7 +11,7 @@ function processAttachment(attachment) {
 	return attachment;
 }
 
-function generateEmbed(message) {
+function generateEmbed(message, starEmoji, embedColor, minCount) {
 	let image = message.attachments.size > 0 ? processAttachment(message.attachments.array()[0].url) : '';
 	if (image === '') {
 		if (message.embeds.length) {
@@ -56,14 +51,14 @@ function generateEmbed(message) {
 		.setImage(image);
 }
 
-async function applyStarboardMessage(message, subtract = false) {
+async function applyStarboardMessage(message, starEmoji, embedColor, minCount, subtract = false) {
 	const starChannel = message.guild.channels.cache.find(channel => channel.name.toLowerCase().indexOf('starboard') !== -1);
 	if (!starChannel && message.reactions.cache.size === 1 && !subtract) { // only happens when the first emoji is added on a message
 		return message.channel.send(`It appears that you do not have a \`Starboard\` channel.`);
 	}
 
 	try {
-		const embed = generateEmbed(message);
+		const embed = generateEmbed(message, starEmoji, embedColor, minCount);
 		const reactionCount = parseInt(embed.fields[0].value);
 
 		// If a star message already exists, edit the old one instead of making a new one
@@ -91,9 +86,17 @@ async function applyStarboardMessage(message, subtract = false) {
 
 let starOwn = moment(); // starts at bot lifetime
 let starBot = moment();
-const add = async (reaction, user) => {
+const add = async (context) => {
+	const reaction = context.reaction;
+	const user = context.user;
+	const nosql = context.nosql;
 	const message = reaction.message;
-	if (reaction.emoji.name !== starEmoji) {
+
+	const config = nosql.get('config')
+		.find({serverID: message.guild.id})
+		.value().config
+
+	if (reaction.emoji.name !== config.starEmoji) {
 		return;
 	}
 	const starChannel = message.guild.channels.cache.find(channel => channel.name.toLowerCase().indexOf('starboard') !== -1); // temporary fix
@@ -122,12 +125,20 @@ const add = async (reaction, user) => {
 		return;
 	}
 
-	await applyStarboardMessage(message);
+	await applyStarboardMessage(message, config.starEmoji, config.starEmbedColor, config.starMinCount || 1);
 }
 
-const subtract = async (reaction, user) => {
+const subtract = async (context) => {
+	const reaction = context.reaction;
+	const user = context.user;
+	const nosql = context.nosql;
 	const message = reaction.message;
-	if (reaction.emoji.name !== starEmoji) {
+
+	const config = nosql.get('config')
+		.find({serverID: message.guild.id})
+		.value().config
+
+	if (reaction.emoji.name !== config.starEmoji) {
 		return;
 	}
 
@@ -136,7 +147,7 @@ const subtract = async (reaction, user) => {
 		return;
 	}
 
-	await applyStarboardMessage(message, true);
+	await applyStarboardMessage(message, config.starEmoji, config.starEmbedColor, config.starMinCount || 1,  true);
 }
 
 module.exports = {

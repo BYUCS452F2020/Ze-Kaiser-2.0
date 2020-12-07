@@ -1,6 +1,7 @@
-const config = require('../config.json');
 const { exec } = require('child_process');
 const sqlite = require("../database/sqlite");
+const nosql = require("../database/nosql")
+const {getConfig} = require('../utils')
 
 const complete = (context) => {
 	let args = context.args;
@@ -14,7 +15,7 @@ const complete = (context) => {
 			addRoles(context);
 		})
 		.catch((err) => {
-			sendError(receivedMessage, err);
+			sendError(context, err);
 		});
 	}
 	else {
@@ -23,7 +24,7 @@ const complete = (context) => {
 			addRole(context);
 		})
 		.catch((err) => {
-			sendError(receivedMessage, err);
+			sendError(context, err);
 		});
 	}
 }
@@ -60,7 +61,7 @@ const addRole = (context) => {
 	} else {
 		return receivedMessage.member.roles.add(zeRole).then(() => {
 			receivedMessage.channel.send(`${receivedMessage.author}, you have been given the "${zeRole.name}" role.`).catch((err) => {
-				sendError(receivedMessage, err);
+				sendError(context, err);
 			});
 		}).catch(() => {
 			receivedMessage.channel.send('Failed to add the role.');
@@ -138,7 +139,7 @@ const removeRole = (context) => {
 	if (receivedMessage.member.roles.cache.has(zeRole.id)) {
 		return receivedMessage.member.roles.remove(zeRole).then(() => {
 			receivedMessage.channel.send(`${receivedMessage.author}, I've removed the "${zeRole.name}" role from you.`).catch((err) => {
-				sendError(receivedMessage, err);
+				sendError(context, err);
 			});
 		}).catch(() => {
 			receivedMessage.channel.send('Failed to remove the role.');
@@ -213,7 +214,7 @@ const info = (context) => {
 
 	if (mentionedChannel) {
 		receivedMessage.channel.send(`${mentionedChannel.name}: ${mentionedChannel.topic}`).catch((err) => {
-			sendError(receivedMessage, err);
+			sendError(context, err);
 		});
 	}
 	else {
@@ -226,7 +227,7 @@ const info = (context) => {
 		}
 		if (zeChannel.type === 'text') {
 			receivedMessage.channel.send(`${zeChannel.name}: ${zeChannel.topic}`).catch((err) => {
-				sendError(receivedMessage, err);
+				sendError(context, err);
 			});
 		}
 		else {
@@ -267,6 +268,8 @@ const roles = (context) => {
 }
 
 const gitPull = (context) => {
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	let receivedMessage = context.message;
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		return;
@@ -280,7 +283,10 @@ const gitPull = (context) => {
 		});
 }
 
-const sendError = (receivedMessage, err) => {
+const sendError = (context, err) => {
+	const receivedMessage = context.message;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	console.error(err);
 	let errorEmbed = new Discord.MessageEmbed().setColor('#bf260b');
 	errorEmbed.setTitle('Glitch in the Matrix');
@@ -303,6 +309,8 @@ const sendError = (receivedMessage, err) => {
 const banish = async (context) => {
 	let receivedMessage = context.message;
 	let db = context.db;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	// only admins can banish
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		receivedMessage.channel.send(receivedMessage.author, {
@@ -363,6 +371,8 @@ const banish = async (context) => {
 const unbanish = async (context) => {
 	let receivedMessage = context.message;
 	let db = context.db;
+	const config = getConfig(context.message.guild.id, context.nosql)
+
 	if (!config.administrators.includes(receivedMessage.author.id)) {
 		await receivedMessage.channel.send(receivedMessage.author, {
 			files: ['./misc-files/no-power.gif']
@@ -388,6 +398,21 @@ const unbanish = async (context) => {
 	receivedMessage.channel.send("You may return, " + Array.from(whoToUnbanish.values()).join(" "));
 }
 
+const viewConfig = async(context) => {
+	const config = getConfig(context.message.guild.id, context.nosql)
+
+	let receivedMessage = context.message;
+
+	if (!config.administrators.includes(receivedMessage.author.id)) {
+		await receivedMessage.channel.send(receivedMessage.author, {
+			files: ['./misc-files/no-power.gif']
+		});
+		return;
+	}
+
+	receivedMessage.channel.send(JSON.stringify(config, null, 4));
+}
+
 module.exports = {
 	complete,
 	addRole,
@@ -400,5 +425,6 @@ module.exports = {
 	gitPull,
 	sendError,
 	banish,
-	unbanish
+	unbanish,
+	viewConfig,
 };
